@@ -93,7 +93,7 @@ def handlePostback(sender_psid, postback):
     callSendAPI(sender_psid, response)
 
 def prepareJoke():
-    jokes = pd.read_csv(os.path.join(sys.path[0], 'onelinefun.csv'))
+    jokes = pd.read_csv(os.path.join(os.getcwd(), 'onelinefun.csv'))
     random_number = random.randrange(0, 2000)
     joke = jokes.iloc[random_number]['Joke']
 
