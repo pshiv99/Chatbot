@@ -1,5 +1,7 @@
 from flask import Flask, request
 import json
+import sys
+import os
 import requests, random
 import pandas as pd
 
@@ -91,7 +93,7 @@ def handlePostback(sender_psid, postback):
     callSendAPI(sender_psid, response)
 
 def prepareJoke():
-    jokes = pd.read_csv('onelinefun.csv')
+    jokes = pd.read_csv(os.path.join(sys.path[0], 'onelinefun.csv'))
     random_number = random.randrange(0, 2000)
     joke = jokes.iloc[random_number]['Joke']
 
