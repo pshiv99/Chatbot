@@ -1,6 +1,7 @@
 from flask import Flask, request
 import json
-import requests
+import requests, random
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -21,24 +22,31 @@ def abc():
     data = request.get_json()
     if data['object'] == 'page':
         for entry in data['entry']:
-            print(json.dumps(entry['messaging'][0], indent = 2))
-        
-        sender_psid = entry['messaging'][0]['sender']['id']
+            sender_psid = entry['messaging'][0]['sender']['id']
 
-        if 'message' in entry['messaging'][0]:
-            handleMessage(sender_psid, entry['messaging'][0]['message'])
-        elif 'postback' in entry['messaging'][0]:
-            handlePostback(sender_psid, entry['messaging'][0]['postback'])
-
-        print(sender_psid)
-        return 'EVENT_RECEIVED'
+            if 'message' in entry['messaging'][0]:
+                handleMessage(sender_psid, entry['messaging'][0]['message'])
+            elif 'postback' in entry['messaging'][0]:
+                handlePostback(sender_psid, entry['messaging'][0]['postback'])
+    print(request.headers)
+    return 'EVENT_RECEIVED'
 
 def handleMessage(sender_psid, message):
-    if 'text' in message:
+    if 'quick_reply' in message:
+        if message['quick_reply']['payload'] == 'continue sending jokes':
+            payload = prepareJoke()
+        elif message['quick_reply']['payload'] == 'stop sending jokes':
+            payload = {
+                'text': 'Okay!'
+            }
+    elif 'text' in message:
         text = message['text']
-        payload = {
+        if text == 'Jokes':
+            payload = prepareJoke()
+        else:
+            payload = {
             'text': f'You sent the message: "{text}". Now send me an image!'
-        }
+            }
     elif 'attachments' in message:
         attachment_url = message['attachments'][0]['payload']['url']
         payload = {
@@ -81,6 +89,28 @@ def handlePostback(sender_psid, postback):
             'text': 'Oops, try sending another image.'
         }
     callSendAPI(sender_psid, response)
+
+def prepareJoke():
+    jokes = pd.read_csv('onelinefun.csv')
+    random_number = random.randrange(0, 2000)
+    joke = jokes.iloc[random_number]['Joke']
+
+    payload = {
+        'text': joke,
+        'quick_replies': [
+            {
+                'content_type': 'text',
+                'title': 'ONE MORE',
+                'payload': 'continue sending jokes'
+            },
+            {
+                'content_type': 'text',
+                'title': 'STOP',
+                'payload': 'stop sending jokes'
+            }
+        ]
+    }
+    return payload
 
 def callSendAPI(sender_psid, payload):
     request_body = {
