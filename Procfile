@@ -1,1 +1,1 @@
-web: gunicorn app:tiara
+web: gunicorn app:app
