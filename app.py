@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 import json
 import sys
 import os
@@ -21,7 +21,7 @@ def index():
 
 @app.route('/webhook', methods = ['POST'])
 def abc():
-    data = request.get_json()
+    data = request.json
     if data['object'] == 'page':
         for entry in data['entry']:
             sender_psid = entry['messaging'][0]['sender']['id']
@@ -30,8 +30,7 @@ def abc():
                 handleMessage(sender_psid, entry['messaging'][0]['message'])
             elif 'postback' in entry['messaging'][0]:
                 handlePostback(sender_psid, entry['messaging'][0]['postback'])
-    print(request.headers)
-    return 'EVENT_RECEIVED'
+    return Response(status=200)
 
 def handleMessage(sender_psid, message):
     if 'quick_reply' in message:
